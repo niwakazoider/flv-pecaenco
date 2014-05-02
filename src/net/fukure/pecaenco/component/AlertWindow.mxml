@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple custom MXML Spark TitleWindow component.
+The TitleWindowApp application displays this component. 
+You cannot run it independently. -->
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               title="Alert"
+			   visible="false">
+    <s:layout>
+        <s:VerticalLayout />
+    </s:layout>
+    <fx:Script>
+        <![CDATA[
+            import mx.managers.PopUpManager;
+            public function setLabel(title:String, message:String):void {
+				this.title = title;
+				this.message.text = message;
+			}
+        ]]>
+    </fx:Script>
+    
+	<s:VGroup width="100%" horizontalAlign="center">
+		<s:HGroup width="100%" paddingLeft="10" paddingRight="10" paddingTop="10">
+			<s:Label id="message" text=""/>
+		</s:HGroup>
+		<s:HGroup paddingBottom="10">
+			<s:Button label="OK" click="PopUpManager.removePopUp(this);"/>
+		</s:HGroup>
+	</s:VGroup>
+    
+</s:TitleWindow>

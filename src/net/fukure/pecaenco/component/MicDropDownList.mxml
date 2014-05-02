@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:DropDownList xmlns:fx="http://ns.adobe.com/mxml/2009" 
+            xmlns:s="library://ns.adobe.com/flex/spark" 
+            xmlns:mx="library://ns.adobe.com/flex/halo"
+            dataProvider="{micDP}" 
+            width="150" 
+			creationComplete="init()"
+            labelField="label">
+	
+	<fx:Script>
+		<![CDATA[
+		
+		import mx.collections.ArrayCollection;
+		import net.fukure.pecaenco.bcmedia.MyMicrophone;
+            
+		[Bindable]
+		private var micDP:ArrayCollection = new ArrayCollection();
+
+		private function init():void {
+			var list:Array = new MyMicrophone().getList();
+			for (var i:int = 0; i < list.length; i++) 
+			{
+				micDP.addItem({label:list[i]});
+			}
+			selectedIndex = 0;
+		}
+		public function getItem():String {
+			return micDP.getItemAt(selectedIndex).label as String;
+		}
+		
+		]]>
+	</fx:Script>
+	
+</s:DropDownList>

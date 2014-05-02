@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:my="net.fukure.pecaenco.component.*"
+			   applicationComplete="init()">
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+		import flash.events.TimerEvent;
+		import flash.utils.Timer;
+		import mx.managers.PopUpManager;
+		import net.fukure.pecaenco.component.AlertWindow;
+		import net.fukure.pecaenco.event.MyEvent;
+		import net.fukure.pecaenco.bcmedia.MyMedia;
+		import net.fukure.pecaenco.stream.MyBroadcastStream;
+		
+		private var media:MyMedia;
+		private var bcs:MyBroadcastStream;
+		private var state:String = "wait";
+		
+		public function init():void {
+			var timer:Timer = new Timer(100, 1);
+			timer.addEventListener(TimerEvent.TIMER, function(e:TimerEvent):void {
+				
+				media = new MyMedia();
+				media.init(cameraBox.getItem(), micBox.getItem());
+				
+				levelGroup.setMic( media.getMic() );
+				video.addChild( media.getVideo() );
+				
+				statechange("ready");
+			});
+			timer.start();
+		}
+		
+		public function publish():void {
+			
+			bcs = new MyBroadcastStream(media);
+			bcs.addEventListener(MyEvent.CONNECT, function(e:MyEvent):void {
+				bcs.publish();
+			});
+			bcs.addEventListener(MyEvent.PUBLISH, function(e:MyEvent):void {
+				statechange("broadcast");
+			});
+			bcs.addEventListener(MyEvent.UNPUBLISH, function(e:MyEvent):void {
+				statechange("ready");
+				onUnPublish();
+			});
+			bcs.addEventListener(MyEvent.ERROR, function(e:MyEvent):void {
+				statechange("ready");
+				onError();
+			});
+			bcs.connect();
+			
+			statechange("wait");
+		}
+		
+		public function stop():void {
+			statechange("wait");
+			if (bcs != null) {
+				bcs.close();
+			}
+		}
+		
+		public function onError():void {
+			var alert:AlertWindow = AlertWindow(PopUpManager.createPopUp(this, AlertWindow , true));
+            alert.setLabel("通知", "配信を開始できません");
+			PopUpManager.centerPopUp(alert);
+			alert.setVisible(true);
+		}
+		
+		public function onUnPublish():void {
+			var alert:AlertWindow = AlertWindow(PopUpManager.createPopUp(this, AlertWindow , true));
+            alert.setLabel("通知", "配信が終了しました");
+			PopUpManager.centerPopUp(alert);
+			alert.setVisible(true);
+		}
+		
+		public function statechange(state:String):void {
+			this.state = state;
+			switch(state) {
+				case "wait":
+					previewButton.enabled = false;
+					publishButton.enabled = false;
+					stopButton.enabled = false;
+					micBox.enabled = false;
+					cameraBox.enabled = false;
+					break;
+				case "ready":
+					publishButton.enabled = true;
+					publishButton.setVisible(true);
+					stopButton.enabled = false;
+					stopButton.setVisible(false);
+					micBox.enabled = true;
+					cameraBox.enabled = true;
+					break;
+				case "broadcast":
+					publishButton.enabled = false;
+					publishButton.setVisible(false);
+					stopButton.enabled = true;
+					stopButton.setVisible(true);
+					micBox.enabled = false;
+					cameraBox.enabled = false;
+					break;
+			}
+		}
+		
+		]]>
+	</fx:Script>
+	
+	<s:HGroup paddingBottom="10" paddingLeft="10" paddingRight="10" paddingTop="10">
+		<s:Group width="320" height="240">
+			<s:SkinnableContainer backgroundColor="0x000000" width="100%" height="100%"></s:SkinnableContainer>
+			<s:VideoDisplay id="video" width="100%" height="100%"></s:VideoDisplay>
+		</s:Group>
+		<s:VGroup gap="10" height="100%">
+			<s:HGroup verticalAlign="middle" gap="0">
+				<my:CameraDropDownList id="cameraBox" width="150" change="init()" />
+			</s:HGroup>
+			<s:HGroup verticalAlign="middle" gap="0">
+				<s:Label text="bps" width="30"></s:Label>
+				<s:HSlider id="bpsSlider" width="120" minimum="128" maximum="1280"
+					value="512" stepSize="128" liveDragging="false"
+					dataTipPrecision="0" change="media.setVideoQuality(bpsSlider.value, 0)"/>
+			</s:HGroup>
+			<s:HGroup verticalAlign="middle" gap="0">
+				<s:Label text="fps" width="30"></s:Label>
+				<s:HSlider id="fpsSlider" width="120" minimum="1" maximum="30"
+					value="20" stepSize="1" liveDragging="false"
+					dataTipPrecision="0" change="media.setVideoFps(fpsSlider.value)"/>
+			</s:HGroup>
+			<s:HGroup verticalAlign="middle" gap="0" paddingTop="20">
+				<my:MicDropDownList id="micBox" width="150" change="init()" />
+				<my:VolumeHGroup id="levelGroup" paddingLeft="10" width="50" height="90%" />
+			</s:HGroup>
+			<s:HGroup verticalAlign="middle" gap="0">
+				<s:Label text="vol" width="30"></s:Label>
+				<s:HSlider id="volumeSlider" width="120" minimum="0" maximum="100"
+					value="50" stepSize="10" liveDragging="false"
+					dataTipPrecision="0" change="media.setMicVolume(volumeSlider.value)"/>
+			</s:HGroup>
+			<s:HGroup verticalAlign="bottom" horizontalAlign="right" gap="0" paddingTop="20" height="100%" width="150">
+				<s:Group>
+					<s:Button id="previewButton" label="preview" click="init()" visible="false"></s:Button>
+					<s:Button id="publishButton" label="publish" click="publish()" enabled="false"></s:Button>
+					<s:Button id="stopButton" label="stop" click="stop()" enabled="false" visible="false"></s:Button>
+				</s:Group>
+			</s:HGroup>
+		</s:VGroup>
+	</s:HGroup>
+</s:Application>
